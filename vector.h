@@ -10,19 +10,19 @@ const int MAX_VECTOR_SIZE = 100000000;
 
 template<typename T>
 class TVector {
-protected:
+public:
     size_t _size;
     size_t _capacity;
     T* pMem;
 
-public:
     TVector(size_t size = 1) : _size(size), _capacity(size) {
-        if (size == 0)
-            throw std::length_error("Vector size should be greater than zero");
-        if (size > MAX_VECTOR_SIZE)
-            throw std::length_error("Vector size cannot be greater than MAX_VECTOR_SIZE");
-        pMem = new T[size]();
-    }
+    if (size == 0)
+        throw std::length_error("Vector size should be greater than zero");
+    if (size > MAX_VECTOR_SIZE)
+        throw std::length_error("Vector size cannot be greater than MAX_VECTOR_SIZE");
+    pMem = new T[size];
+}
+
 
     TVector(const T* data, size_t size) : _size(size), _capacity(size) {
         assert(data != nullptr && "TVector constructor requires non-nullptr argument.");
@@ -60,34 +60,57 @@ public:
         return _size;
     }
 
-    size_t capacity() const noexcept {
-        return _capacity;
+    size_t capacity() const {
+    return _capacity;
     }
+
+    void reallocate(size_t new_capacity) {
+    T* newMem = new T[new_capacity];  // Новый массив памяти
+
+    // Копируем старые элементы
+    for (size_t i = 0; i < _size; ++i) {
+        newMem[i] = pMem[i];
+    }
+
+    delete[] pMem;  // Освобождаем старую память
+    pMem = newMem;
+    _capacity = new_capacity;
+}
+
+
+    void resize(size_t new_size) {
+    if (new_size > _capacity) {
+        reallocate(new_size);
+    }
+    for (size_t i = _size; i < new_size; ++i) {
+        pMem[i] = T();  // Явная инициализация
+    }
+    _size = new_size;
+}
+
 
     void push_back(const T& value) {
-        if (_size == _capacity) {
-            _capacity = (_capacity == 0) ? 1 : _capacity * 2;
-            T* newMem = new T[_capacity];
-            std::copy(pMem, pMem + _size, newMem);
-            delete[] pMem;
-            pMem = newMem;
-        }
-        pMem[_size++] = value;
+    if (_size == _capacity) {
+        size_t new_capacity = (_capacity == 0) ? 1 : _capacity * 2;
+        reallocate(new_capacity);
+    }
+    pMem[_size++] = value;  // Добавляем элемент
+}
+
+
+    const T& operator[](size_t index) const {
+    if (index >= _size) {
+        throw std::out_of_range("Index out of range");
+    }
+    return pMem[index];
     }
 
-    T& operator[](size_t ind) {
-        if (ind >= _size) {
-            throw std::out_of_range("Index out of range");
-        }
-        return pMem[ind];
+    T& operator[](size_t index) {
+    if (index >= _size) {
+        throw std::out_of_range("Index out of range");
     }
-
-    const T& operator[](size_t ind) const {
-        if (ind >= _size) {
-            throw std::out_of_range("Index out of range");
-        }
-        return pMem[ind];
-    }
+    return pMem[index];
+}
 
     T& at(size_t ind) {
         if (ind >= _size) {
