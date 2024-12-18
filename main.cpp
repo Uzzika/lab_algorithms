@@ -1,69 +1,91 @@
 #include <iostream>
 #include <fstream>
-#include "kruskal.h"
+#include <chrono>
+#include "kruskal.h"  // Включаем kruskal.h с функцией generateGraph
 #include "vector.h"
 
+// Функция для замера времени выполнения
+void measureAndLog(std::ofstream& results, const std::string& label, int n, TVector<Edge>& edges) {
+    std::cout << "Запуск теста: " << label << std::endl;
+
+    auto startA = std::chrono::high_resolution_clock::now();
+    kruskal(n, edges, false);  // Алгоритм А (без сжатия путей)
+    auto endA = std::chrono::high_resolution_clock::now();
+
+    auto startB = std::chrono::high_resolution_clock::now();
+    kruskal(n, edges, true);  // Алгоритм B (со сжатием путей)
+    auto endB = std::chrono::high_resolution_clock::now();
+
+    results << label << ", A: "
+            << std::chrono::duration<double>(endA - startA).count()
+            << ", B: "
+            << std::chrono::duration<double>(endB - startB).count()
+            << "\n";
+
+    // Добавляем flush для немедленной записи
+    results.flush();
+}
+
 int main() {
-    std::ifstream input("C:\\Users\\79200\\source\\prog-algorythms24-25\\graph.txt");
-    if (!input) {
-        std::cerr << "Ошибка: файл graph.txt не найден!" << std::endl;
-        return 1;
-    }
+    try {
+        int q = 1, r = 100;  // Диапазон весов рёбер
 
-    int n, m;
-    input >> n >> m;
+        // === 3.1 ===
+        std::ofstream results_3_1("C:\\Users\\79200\\source\\prog-algorythms24-25\\results_3_1.txt");
+        for (int n = 10; n <= 200; n += 10) {
+            int m1 = std::min((n * n) / 10, n * (n - 1) / 2);  // Ограничиваем m
+            int m2 = std::min(n * n, n * (n - 1) / 2);
+            TVector<Edge> edges1 = generateGraph(n, m1, q, r);
+            TVector<Edge> edges2 = generateGraph(n, m2, q, r);
+            measureAndLog(results_3_1, "3.1, n=" + std::to_string(n) + ", m=n^2/10", n, edges1);
+            measureAndLog(results_3_1, "3.1, n=" + std::to_string(n) + ", m=n^2", n, edges2);
+        }
 
-    if (n <= 0 || m <= 0) {
-        std::cerr << "Ошибка: количество вершин или рёбер некорректно!" << std::endl;
-        return 1;
-    }
+        // === 3.2 ===
+        std::ofstream results_3_2("C:\\Users\\79200\\source\\prog-algorythms24-25\\results_3_2.txt");
+        for (int n = 10; n <= 200; n += 10) {
+            int m1 = std::min(100 * n, n * (n - 1) / 2);
+            int m2 = std::min(1000 * n, n * (n - 1) / 2);
+            TVector<Edge> edges1 = generateGraph(n, m1, q, r);
+            TVector<Edge> edges2 = generateGraph(n, m2, q, r);
+            measureAndLog(results_3_2, "3.2, n=" + std::to_string(n) + ", m=100n", n, edges1);
+            measureAndLog(results_3_2, "3.2, n=" + std::to_string(n) + ", m=1000n", n, edges2);
+        }
 
-    TVector<Edge> edges;
-    for (int i = 0; i < m; ++i) {
-        int u, v, weight;
-        input >> u >> v >> weight;
-
-        if (input.fail()) {
-            std::cerr << "Ошибка: некорректный формат данных в файле!" << std::endl;
+        // === 3.3 === Выполняем фиксированное n, варьируем m
+        std::ofstream results_3_3("C:\\Users\\79200\\source\\prog-algorythms24-25\\results_3_3.txt");
+        if (!results_3_3) {
+            std::cerr << "Ошибка открытия файла results_3_3.txt для записи!\n";
             return 1;
         }
-
-        if (!(u == 0 && v == 0 && weight == 0)) {
-            edges.push_back(Edge(u, v, weight));
-        } else {
-            std::cout << "Игнорируем дефолтное ребро на этапе чтения." << std::endl;
+        int n_fixed = 200;  // Фиксированное значение n
+        for (int m = 0; m <= 5000; m += 500) {  // Варьируем m от 0 до 5000 с шагом 500
+            TVector<Edge> edges = generateGraph(n_fixed, m, q, r);
+            measureAndLog(results_3_3, "3.3, n=" + std::to_string(n_fixed) + ", m=" + std::to_string(m), n_fixed, edges);
         }
-    }
-    input.close();
+        results_3_3.close();
+        std::cout << "=== Тест 3.3 завершён ===" << std::endl;
 
-    // Фильтрация перед запуском алгоритма
-    TVector<Edge> filtered_edges;
-    for (size_t i = 0; i < edges.size(); ++i) {
-        if (!(edges[i].u == 0 && edges[i].v == 0 && edges[i].weight == 0)) {
-            filtered_edges.push_back(edges[i]);
+        // === 3.4 === Выполняем фиксированное n и m, варьируем r
+        std::ofstream results_3_4("C:\\Users\\79200\\source\\prog-algorythms24-25\\results_3_4.txt");
+        if (!results_3_4) {
+            std::cerr << "Ошибка открытия файла results_3_4.txt для записи!\n";
+            return 1;
         }
-    }
-    edges = filtered_edges;
+        for (int r_val = 10; r_val <= 200; r_val += 10) {  // Варьируем r от 10 до 200 с шагом 10
+            int m = n_fixed * n_fixed / 10;  // m ≈ n^2 / 10
+            TVector<Edge> edges = generateGraph(n_fixed, m, q, r_val);
+            measureAndLog(results_3_4, "3.4, r=" + std::to_string(r_val), n_fixed, edges);
+        }
+        results_3_4.close();
+        std::cout << "=== Тест 3.4 завершён ===" << std::endl;
 
-    // Запускаем алгоритм Краскала без сжатия путей
-    std::cout << "MST без сжатия путей:" << std::endl;
-    TVector<Edge> mst_no_compression = kruskal(n, edges, false);
-    int total_weight_no_compression = 0;
-    for (const Edge& edge : mst_no_compression) {
-        std::cout << edge.u << " - " << edge.v << " : " << edge.weight << std::endl;
-        total_weight_no_compression += edge.weight;
-    }
-    std::cout << "Общий вес: " << total_weight_no_compression << std::endl;
+        std::cout << "Все тесты завершены. Результаты записаны в отдельные файлы.\n";
 
-    // Запускаем алгоритм Краскала со сжатием путей
-    std::cout << "\nMST со сжатием путей:" << std::endl;
-    TVector<Edge> mst_with_compression = kruskal(n, edges, true);
-    int total_weight_with_compression = 0;
-    for (const Edge& edge : mst_with_compression) {
-        std::cout << edge.u << " - " << edge.v << " : " << edge.weight << std::endl;
-        total_weight_with_compression += edge.weight;
+    } catch (const std::exception& e) {
+        std::cerr << "Ошибка: " << e.what() << std::endl;
+        return 1;
     }
-    std::cout << "Общий вес: " << total_weight_with_compression << std::endl;
 
     return 0;
 }

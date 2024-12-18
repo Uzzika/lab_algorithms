@@ -15,14 +15,13 @@ public:
     size_t _capacity;
     T* pMem;
 
-    TVector(size_t size = 1) : _size(size), _capacity(size) {
-    if (size == 0)
-        throw std::length_error("Vector size should be greater than zero");
+    TVector(size_t size = 0) : _size(size), _capacity(size), pMem(nullptr) {
     if (size > MAX_VECTOR_SIZE)
         throw std::length_error("Vector size cannot be greater than MAX_VECTOR_SIZE");
-    pMem = new T[size];
-}
-
+    if (size > 0) {
+        pMem = new T[size];
+    }
+    }
 
     TVector(const T* data, size_t size) : _size(size), _capacity(size) {
         assert(data != nullptr && "TVector constructor requires non-nullptr argument.");
@@ -48,8 +47,11 @@ public:
     }
 
     ~TVector() {
+    if (pMem) {
         delete[] pMem;
     }
+    }
+
 
     TVector& operator=(TVector v) {
         swap(*this, v);
@@ -69,14 +71,13 @@ public:
 
     // Копируем старые элементы
     for (size_t i = 0; i < _size; ++i) {
-        newMem[i] = pMem[i];
+    newMem[i] = std::move(pMem[i]);
     }
 
     delete[] pMem;  // Освобождаем старую память
     pMem = newMem;
     _capacity = new_capacity;
-}
-
+    }
 
     void resize(size_t new_size) {
     if (new_size > _capacity) {
@@ -96,7 +97,6 @@ public:
     }
     pMem[_size++] = value;  // Добавляем элемент
 }
-
 
     const T& operator[](size_t index) const {
     if (index >= _size) {

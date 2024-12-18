@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/MinGW/include", // Основные заголовки MinGW
+                "C:/MinGW/lib/gcc/mingw32/9.2.0/include", // Заголовки стандартной библиотеки
+                "C:/MinGW/lib/gcc/mingw32/9.2.0/include/c++" // Заголовки C++
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE"
+            ],
+            "compilerPath": "C:/MinGW/bin/g++.exe", // Путь к компилятору
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ],
+    "version": 4
+}

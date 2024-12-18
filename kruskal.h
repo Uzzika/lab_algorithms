@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <random>
 #include "vector.h"
 
 // Структура для хранения ребра
@@ -16,6 +17,25 @@ struct Edge {
         return weight < other.weight;
     }
 };
+
+// Генерация случайного графа
+TVector<Edge> generateGraph(int n, int m, int q, int r) {
+    TVector<Edge> edges;
+    std::default_random_engine generator;
+    std::uniform_int_distribution<int> vertex_dist(0, n - 1);  // Вершины от 0 до n-1
+    std::uniform_int_distribution<int> weight_dist(q, r);     // Веса в диапазоне [q, r]
+
+    while (edges.size() < m) {
+        int u = vertex_dist(generator);
+        int v = vertex_dist(generator);
+        int weight = weight_dist(generator);
+
+        if (u != v) {  // Исключаем петли (u != v)
+            edges.push_back(Edge(u, v, weight));
+        }
+    }
+    return edges;
+}
 
 // Дискретное множество без сжатия путей
 class DisjointSetNoCompression {
